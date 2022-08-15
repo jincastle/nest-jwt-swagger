@@ -6,6 +6,7 @@ import {
   Get,
   Post,
   Req,
+  UploadedFile,
   UseFilters,
   UseGuards,
   UseInterceptors,
@@ -20,6 +21,7 @@ import { LoginRequestDto } from 'src/auth/dto/login.request.dto';
 import { CatCurrentDto } from './dto/cat.current.dto';
 import { CurrentUser } from 'src/common/decorators/user.decorator';
 import { Cat } from './cats.schema';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @Controller('cats')
 @UseInterceptors(SuccessInterceptor)
@@ -53,14 +55,16 @@ export class CatsController {
   }
 
   @ApiOperation({ summary: '로그인' })
-  @Post('/login')
+  @Post('login')
   logIn(@Body() data: LoginRequestDto) {
     return this.authService.jwtLogIn(data);
   }
 
   @ApiOperation({ summary: '업데이트' })
-  @Post('upload/cats')
-  uploadCatImg() {
-    return;
+  @UseInterceptors(FileInterceptor('image'))
+  @Post('upload')
+  uploadCatImg(@UploadedFile() files: Express.Multer.File) {
+    console.log(files);
+    return 'uploadImg';
   }
 }

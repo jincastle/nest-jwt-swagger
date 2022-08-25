@@ -27,4 +27,19 @@ export class CatsRepository {
     const cat = await this.catModel.findById(catId).select('-password'); //select 해당하는 필드중 password 제외해서 가지고 온다(보안성)
     return cat;
   }
+
+  async findByIdAndUpdateImg(id: string, fileName: string) {
+    const cat = await this.catModel.findById(id);
+
+    cat.imgUrl = `http://localhost:8000/media/${fileName}`;
+
+    const newCat = await cat.save();
+
+    console.log(newCat);
+    return newCat.readOnlyData;
+  }
+
+  async findAll() {
+    return await this.catModel.find();
+  }
 }

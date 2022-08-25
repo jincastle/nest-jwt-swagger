@@ -18,12 +18,12 @@ import { ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { ReadOnlyCatDto } from './dto/cat.dto';
 import { AuthService } from 'src/auth/auth.service';
 import { LoginRequestDto } from 'src/auth/dto/login.request.dto';
-import { CatCurrentDto } from './dto/cat.current.dto';
 import { CurrentUser } from 'src/common/decorators/user.decorator';
+import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { Cat } from './cats.schema';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { multerOptions } from 'src/common/utils/multer.options';
 
-@Controller('cats')
+@Controller('user')
 @UseInterceptors(SuccessInterceptor)
 @UseFilters(HttpExceptionFilter)
 export class CatsController {
@@ -49,8 +49,9 @@ export class CatsController {
     type: ReadOnlyCatDto, //받을 값을 미리 보여준다.
   })
   @ApiOperation({ summary: '회원가입' })
-  @Post()
+  @Post('signup')
   async signUp(@Body() body: CatRequestDto) {
+    console.log(body);
     return await this.catsService.signUp(body);
   }
 
@@ -60,11 +61,22 @@ export class CatsController {
     return this.authService.jwtLogIn(data);
   }
 
-  @ApiOperation({ summary: '업데이트' })
-  @UseInterceptors(FileInterceptor('image'))
+  @ApiOperation({ summary: '이미지 업로드' })
+  @UseInterceptors(FilesInterceptor('image', 10, multerOptions('cats')))
+  @UseGuards(JwtAuthGuard)
   @Post('upload')
-  uploadCatImg(@UploadedFile() files: Express.Multer.File) {
+  uploadCatImg(
+    @UploadedFile() files: Array<Express.Multer.File>,
+    @CurrentUser() cat: Cat,
+  ) {
     console.log(files);
-    return 'uploadImg';
+    //return { image: 'http//localhost:8000/media/cats/${files[0].filename}' };
+    return this.catsService.uploadImg(cat, files);
+  }
+
+  @ApiOperation({ summary: '모든 정보 가져오기' })
+  @Get('all')
+  getAllCat() {
+    return this.catsService.getAllCat();
   }
 }

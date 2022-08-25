@@ -4,9 +4,12 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { DocumentBuilder, OpenAPIObject, SwaggerModule } from '@nestjs/swagger';
 import * as expressBasicAuth from 'express-basic-auth';
+import { NestExpressApplication } from '@nestjs/platform-express';
+import path from 'path';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  //const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
   app.useGlobalPipes(new ValidationPipe());
   app.useGlobalFilters(new HttpExceptionFilter());
   //swagger보안 미들웨어
@@ -17,6 +20,11 @@ async function bootstrap() {
       users: { [process.env.SWAGGER_USER]: process.env.SWAGGER_PASSWORD },
     }),
   );
+
+  //http//localhost:8000/media/cats/aaa.png
+  app.useStaticAssets(path.join(__dirname, './common', 'uploads'), {
+    prefix: '/media',
+  });
 
   const config = new DocumentBuilder()
     .setTitle('C.I.C')
@@ -32,7 +40,8 @@ async function bootstrap() {
     credentials: true,
   });
 
-  const PORT = process.env.PORT;
+  const PORT = process.env.PORT || 8000;
   await app.listen(8000);
+  console.log('listening on port ${PORT}');
 }
 bootstrap();
